@@ -1105,7 +1105,7 @@
     <!-- ========================================== -->
     <script>
         // --- KONFIGURASI GOOGLE SHEETS ---
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbweN07wyPr8-VRezmpLtIsGIJQFvq2e9eJaPluDlGb7wGPuxw5iuyNbWsliduPoV44w/exec'; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxHpf9fKJWb2KzxNQfRwCijrMYBH1GpSN1BA4WO7a8k56zdFMY31nsYeI0mIAwdXceq/exec'; 
         
         // --- GLOBAL STATE ---
         let usersData = [];
@@ -1162,24 +1162,11 @@
             }
         }
 
-       async function postToSheet(sheetName, data) {
-            if (!GOOGLE_SCRIPT_URL) {
-                alert("Peringatan: URL Google Script belum diisi, data tidak akan tersimpan!");
-                return;
-            }
+        async function postToSheet(sheetName, data) {
+            if (!GOOGLE_SCRIPT_URL) return;
             try {
-                await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`, { 
-                    method: 'POST', 
-                    body: JSON.stringify(data),
-                    // KUNCI PENTING: Agar tidak diblokir oleh sistem keamanan Browser (CORS)
-                    headers: {
-                        'Content-Type': 'text/plain;charset=utf-8'
-                    }
-                });
-            } catch (err) { 
-                console.error(`Error Posting ${sheetName}:`, err); 
-                alert("Gagal menyimpan ke database. Cek koneksi internet Anda.");
-            }
+                await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`, { method: 'POST', body: JSON.stringify(data) });
+            } catch (err) { console.error(`Error Posting ${sheetName}:`, err); }
         }
 
         // ==========================================
@@ -1268,7 +1255,7 @@
 
         // --- APP INIT ---
         async function initApp() {
-            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbweN07wyPr8-VRezmpLtIsGIJQFvq2e9eJaPluDlGb7wGPuxw5iuyNbWsliduPoV44w/exec') {
+            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbxHpf9fKJWb2KzxNQfRwCijrMYBH1GpSN1BA4WO7a8k56zdFMY31nsYeI0mIAwdXceq/exec') {
                 console.warn('PERINGATAN: URL Google Sheet belum diatur! Aplikasi murni menggunakan Cloud Data. Masukkan URL Script di source code agar data dapat tampil.');
             }
             showView('loginScreen');
@@ -1291,7 +1278,7 @@
         function saveUsers() { postToSheet('users', usersData); }
 
         async function syncWithGoogleSheet() {
-            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbweN07wyPr8-VRezmpLtIsGIJQFvq2e9eJaPluDlGb7wGPuxw5iuyNbWsliduPoV44w/exec') { alert('URL Google Script belum diatur.'); return; }
+            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbxHpf9fKJWb2KzxNQfRwCijrMYBH1GpSN1BA4WO7a8k56zdFMY31nsYeI0mIAwdXceq/exec') { alert('URL Google Script belum diatur.'); return; }
             
             const icons = document.querySelectorAll('.fa-sync-alt');
             icons.forEach(i => i.classList.add('fa-spin'));
