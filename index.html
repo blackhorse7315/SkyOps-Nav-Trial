@@ -1162,11 +1162,24 @@
             }
         }
 
-        async function postToSheet(sheetName, data) {
-            if (!GOOGLE_SCRIPT_URL) return;
+       async function postToSheet(sheetName, data) {
+            if (!GOOGLE_SCRIPT_URL) {
+                alert("Peringatan: URL Google Script belum diisi, data tidak akan tersimpan!");
+                return;
+            }
             try {
-                await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`, { method: 'POST', body: JSON.stringify(data) });
-            } catch (err) { console.error(`Error Posting ${sheetName}:`, err); }
+                await fetch(`${GOOGLE_SCRIPT_URL}?sheet=${sheetName}`, { 
+                    method: 'POST', 
+                    body: JSON.stringify(data),
+                    // KUNCI PENTING: Agar tidak diblokir oleh sistem keamanan Browser (CORS)
+                    headers: {
+                        'Content-Type': 'text/plain;charset=utf-8'
+                    }
+                });
+            } catch (err) { 
+                console.error(`Error Posting ${sheetName}:`, err); 
+                alert("Gagal menyimpan ke database. Cek koneksi internet Anda.");
+            }
         }
 
         // ==========================================
@@ -1278,7 +1291,7 @@
         function saveUsers() { postToSheet('users', usersData); }
 
         async function syncWithGoogleSheet() {
-            if (GOOGLE_SCRIPT_URL === '') { alert('URL Google Script belum diatur.'); return; }
+            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbweN07wyPr8-VRezmpLtIsGIJQFvq2e9eJaPluDlGb7wGPuxw5iuyNbWsliduPoV44w/exec') { alert('URL Google Script belum diatur.'); return; }
             
             const icons = document.querySelectorAll('.fa-sync-alt');
             icons.forEach(i => i.classList.add('fa-spin'));
