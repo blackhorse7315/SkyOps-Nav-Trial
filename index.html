@@ -2139,11 +2139,25 @@
             }
         }
 
+        // Fungsi Helper untuk konversi Base64 menjadi Blob (File Virtual)
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64);
+            const byteArrays = [];
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+            return new Blob(byteArrays, {type: mimeType});
+        }
+
         function previewDocument(id) {
             const doc = documentsData.find(d => d.id === id);
-            if(!doc || !doc.base64) return alert("File tidak ditemukan.");
-            
-            const dataUrl = `data:${doc.mimeType};base64,${doc.base64}`;
+            if(!doc || !doc.base64) return alert("File tidak ditemukan atau rusak.");
             
             document.getElementById('previewModalTitle').innerHTML = `<i class="fas fa-eye text-blue-400 mr-2"></i>${doc.title}`;
             
@@ -2154,11 +2168,21 @@
             if (doc.mimeType.includes('image')) {
                 iframe.style.display = 'none';
                 img.style.display = 'block';
-                img.src = dataUrl;
+                img.src = `data:${doc.mimeType};base64,${doc.base64}`;
             } else {
                 img.style.display = 'none';
                 iframe.style.display = 'block';
-                iframe.src = dataUrl;
+                
+                try {
+                    // Konversi ke Blob URL agar Browser (Chrome/Safari) mau menampilkan PDF di iFrame
+                    const blob = base64ToBlob(doc.base64, doc.mimeType);
+                    const blobUrl = URL.createObjectURL(blob);
+                    iframe.src = blobUrl;
+                } catch(e) {
+                    console.error("Blob conversion error: ", e);
+                    // Fallback darurat
+                    iframe.src = `data:${doc.mimeType};base64,${doc.base64}`;
+                }
             }
             
             document.getElementById('documentPreviewModal').classList.remove('hidden');
@@ -2166,8 +2190,15 @@
 
         function closePreviewModal() {
             document.getElementById('documentPreviewModal').classList.add('hidden');
+            const iframe = document.getElementById('previewIframe');
+            
+            // Bersihkan memori Blob URL jika ada
+            if (iframe.src && iframe.src.startsWith('blob:')) {
+                URL.revokeObjectURL(iframe.src);
+            }
+            
             // Kosongkan src untuk menghentikan media/memori
-            document.getElementById('previewIframe').src = '';
+            iframe.src = '';
             document.getElementById('previewImage').src = '';
         }
 
