@@ -1105,7 +1105,7 @@
     <!-- ========================================== -->
     <script>
         // --- KONFIGURASI GOOGLE SHEETS ---
-        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxvTlg3cwAk58gGKZBRPVP8NojVbOEv3WIAnTtbAmQUlNtet-R6bwqBkFKUI68OMmDK/exec'; 
+        const GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwSJBKmN0mWu95mi3Yz230f8RYAXTksrEIr8yL0AKdifbnWRk5NMza_YhKwNzi92q7N/exec'; 
         
         // --- GLOBAL STATE ---
         let usersData = [];
@@ -1926,120 +1926,11 @@
         // ==========================================
         // --- DOCUMENTS LOGIC (NEW FEATURE)      ---
         // ==========================================
-        async function loadDocuments() {
-            const data = await fetchFromSheet('documents');
-            if (data !== null) { documentsData = data; }
-            renderDocuments();
-        }
-
-        function saveDocuments() { 
-            postToSheet('documents', documentsData); 
-        }
-
-        function handleDocTypeChange() {
-            const type = document.getElementById('docType').value.toLowerCase();
-            const secContainer = document.getElementById('docSectionContainer');
-            const issuedDateContainer = document.getElementById('docIssuedDateContainer');
-            const revisionNoContainer = document.getElementById('docRevisionNoContainer');
-            
-            // Memunculkan kolom Section & Revision No jika tipe mengandung kata 'flight manual'
-            if (type.includes('flight manual')) {
-                secContainer.classList.remove('hidden');
-                revisionNoContainer.classList.remove('hidden');
-                document.getElementById('docSection').required = true;
-            } else {
-                secContainer.classList.add('hidden');
-                revisionNoContainer.classList.add('hidden');
-                document.getElementById('docSection').required = false;
-                document.getElementById('docSection').value = '';
-                document.getElementById('docRevisionNo').value = '';
-            }
-
-            // Memunculkan kolom Issued Date khusus untuk AIP
-            if (type === 'aip') {
-                issuedDateContainer.classList.remove('hidden');
-            } else {
-                issuedDateContainer.classList.add('hidden');
-                document.getElementById('docIssuedDate').value = '';
-            }
-        }
-
-        function handleFileUpload(event) {
-            const file = event.target.files[0];
-            const status = document.getElementById('docFileStatus');
-            const btnSave = document.getElementById('btnSaveDoc');
-            
-            if (!file) {
-                document.getElementById('docBase64').value = '';
-                document.getElementById('docMimeType').value = '';
-                status.textContent = '';
-                return;
-            }
-            
-            // Batas ukuran file 2MB untuk mencegah GSheets crash
-            if (file.size > 2 * 1024 * 1024) {
-                status.textContent = 'File terlalu besar! Maksimal 2MB.';
-                status.className = 'text-[9px] sm:text-[10px] mt-1 text-red-400 font-bold';
-                event.target.value = '';
-                btnSave.disabled = true;
-                return;
-            }
-
-            status.textContent = 'Memproses file...';
-            status.className = 'text-[9px] sm:text-[10px] mt-1 text-yellow-400';
-            btnSave.disabled = true;
-
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const result = e.target.result;
-                const mimeType = result.split(';')[0].split(':')[1];
-                const base64Data = result.split(',')[1];
-                
-                document.getElementById('docMimeType').value = mimeType;
-                document.getElementById('docBase64').value = base64Data;
-                
-                status.textContent = `File siap diupload: ${(file.size/1024).toFixed(1)} KB`;
-                status.className = 'text-[9px] sm:text-[10px] mt-1 text-emerald-400 font-bold';
-                btnSave.disabled = false;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function openDocumentForm(id = null) {
-            document.getElementById('documentForm').reset();
-            document.getElementById('docBase64').value = '';
-            document.getElementById('docMimeType').value = '';
-            document.getElementById('docFileStatus').textContent = '';
-            document.getElementById('btnSaveDoc').disabled = false;
-
-            if (id) {
-                const doc = documentsData.find(d => d.id === id);
-                if (doc) {
-                    document.getElementById('docId').value = doc.id;
-                    document.getElementById('docType').value = doc.type;
-                    document.getElementById('docSection').value = doc.section || '';
-                    document.getElementById('docTitle').value = doc.title;
-                    document.getElementById('docIssuedDate').value = doc.issuedDate || '';
-                    document.getElementById('docRevisionNo').value = doc.revisionNo || '';
-                    document.getElementById('docBase64').value = doc.base64 || '';
-                    document.getElementById('docMimeType').value = doc.mimeType || '';
-                    document.getElementById('docModalTitle').innerHTML = '<i class="fas fa-edit text-blue-400 mr-2"></i>Edit Document';
-                    document.getElementById('docFile').required = false; 
-                }
-            } else {
-                document.getElementById('docId').value = '';
-                document.getElementById('docIssuedDate').value = '';
-                document.getElementById('docRevisionNo').value = '';
-                document.getElementById('docModalTitle').innerHTML = '<i class="fas fa-file-upload text-blue-400 mr-2"></i>Add Document';
-                document.getElementById('docFile').required = true;
-            }
-            handleDocTypeChange();
-            document.getElementById('documentFormModal').classList.remove('hidden');
-        }
-
-        function closeDocumentForm() { document.getElementById('documentFormModal').classList.add('hidden'); }
-
-        function saveDocument(e) {
+       // ==========================================
+        // GANTI FUNGSI-FUNGSI INI DI AREA DOCUMENTS LOGIC
+        // ==========================================
+        
+        async function saveDocument(e) {
             e.preventDefault();
             const id = document.getElementById('docId').value;
             const type = document.getElementById('docType').value.trim();
@@ -2047,25 +1938,67 @@
             const title = document.getElementById('docTitle').value.trim();
             const issuedDate = document.getElementById('docIssuedDate').value;
             const revisionNo = document.getElementById('docRevisionNo').value.trim();
-            const base64 = document.getElementById('docBase64').value;
+            const base64 = document.getElementById('docBase64').value; // Base64 sementara
             const mimeType = document.getElementById('docMimeType').value;
-            const fileName = document.getElementById('docFile').files[0] ? document.getElementById('docFile').files[0].name : '';
+            const docFileEl = document.getElementById('docFile');
+            const fileName = (docFileEl && docFileEl.files[0]) ? docFileEl.files[0].name : '';
+
+            // Cek file lama saat mengedit
+            const existingDoc = id ? documentsData.find(d => d.id === id) : null;
+            let finalFileId = existingDoc ? existingDoc.fileId : '';
+            let finalFileUrl = existingDoc ? existingDoc.fileUrl : '';
 
             if(!id && !base64) {
                 alert("Harap pilih file dokumen terlebih dahulu!");
                 return;
             }
 
+            const btnSave = document.getElementById('btnSaveDoc');
+            const originalBtnText = btnSave.innerHTML;
+
+            // JIKA ADA FILE BARU DIUPLOAD, KIRIM KE DRIVE DULU!
+            if (base64) {
+                btnSave.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Uploading to Drive...';
+                btnSave.disabled = true;
+
+                try {
+                    const uploadRes = await fetch(`${GOOGLE_SCRIPT_URL}?action=upload`, {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            fileName: fileName,
+                            mimeType: mimeType,
+                            base64: base64
+                        })
+                    });
+                    
+                    const uploadData = await uploadRes.json();
+
+                    if (uploadData.status === 'success') {
+                        finalFileId = uploadData.fileId;
+                        finalFileUrl = uploadData.fileUrl;
+                    } else {
+                        throw new Error(uploadData.message || 'Error server Drive.');
+                    }
+                } catch (error) {
+                    alert("Gagal upload ke Google Drive: " + error.message);
+                    btnSave.innerHTML = originalBtnText;
+                    btnSave.disabled = false;
+                    return;
+                }
+            }
+
+            // SIMPAN DATA KE SHEETS (TIDAK MENYERTAKAN BASE64 AGAR TIDAK CRASH)
             const newDoc = {
-                id: id || 'doc_' + Date.now(),
+                id: id || 'doc_' + Date.now().toString(),
                 type: type,
                 section: section,
                 title: title,
                 issuedDate: issuedDate,
                 revisionNo: revisionNo,
-                base64: base64 || (id ? documentsData.find(d => d.id === id).base64 : ''),
-                mimeType: mimeType || (id ? documentsData.find(d => d.id === id).mimeType : ''),
-                fileName: fileName || (id ? documentsData.find(d => d.id === id).fileName : 'document')
+                mimeType: mimeType || (existingDoc ? existingDoc.mimeType : ''),
+                fileName: fileName || (existingDoc ? existingDoc.fileName : 'document'),
+                fileId: finalFileId,   // URL Drive
+                fileUrl: finalFileUrl  // Link File Drive
             };
 
             if (id) {
@@ -2075,151 +2008,36 @@
                 documentsData.push(newDoc);
             }
 
-            saveDocuments();
+            btnSave.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Saving Database...';
+            
+            // Tunggu data sheet disinkronkan
+            await postToSheet('documents', documentsData);
+            
             renderDocuments();
             closeDocumentForm();
-        }
-
-        function renderDocuments() {
-            const container = document.getElementById('documentListContainer');
-            container.innerHTML = '';
             
-            if (documentsData.length === 0) {
-                container.innerHTML = '<div class="text-center py-10 text-slate-500">Belum ada dokumen. Klik "Add Document" untuk memulai.</div>';
-                return;
-            }
-
-            // Group by Type (Pengelompokan folder)
-            const grouped = {};
-            documentsData.forEach(doc => {
-                if(!grouped[doc.type]) grouped[doc.type] = [];
-                grouped[doc.type].push(doc);
-            });
-
-            for (const [type, docs] of Object.entries(grouped)) {
-                const gridId = 'grid-doc-' + type.replace(/[^a-zA-Z0-9]/g, '-').toLowerCase();
-                
-                const typeHeader = document.createElement('div');
-                typeHeader.className = 'bg-slate-800/80 px-4 py-3 rounded-xl border border-slate-700 mb-3 sticky top-0 z-10 shadow-md flex items-center justify-between mt-4 first:mt-0 backdrop-blur-sm cursor-pointer hover:bg-slate-700/80 transition';
-                typeHeader.onclick = () => toggleDocumentFolder(gridId);
-                
-                typeHeader.innerHTML = `
-                    <h3 class="font-bold text-white tracking-wide flex items-center">
-                        <i class="fas fa-chevron-right text-slate-400 mr-3 text-xs transition-transform duration-300" id="icon-${gridId}"></i>
-                        <i class="fas fa-folder text-blue-400 mr-2 text-lg"></i>${type}
-                    </h3>
-                    <span class="text-[10px] font-bold bg-blue-500/20 text-blue-400 border border-blue-500/30 px-2 py-1 rounded-full">${docs.length} FILE</span>
-                `;
-                container.appendChild(typeHeader);
-
-                const grid = document.createElement('div');
-                grid.id = gridId;
-                // Disembunyikan (hidden) secara default
-                grid.className = 'grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 mb-6 hidden';
-
-                docs.forEach(doc => {
-                    const card = document.createElement('div');
-                    card.className = 'bg-slate-800/40 hover:bg-slate-800/80 border border-slate-700/50 hover:border-blue-500/50 rounded-xl p-3 sm:p-4 transition flex flex-col relative group';
-                    
-                    let icon = 'fa-file-alt text-slate-400';
-                    if(doc.mimeType && doc.mimeType.includes('pdf')) icon = 'fa-file-pdf text-red-400';
-                    else if(doc.mimeType && doc.mimeType.includes('image')) icon = 'fa-file-image text-emerald-400';
-                    else if(doc.mimeType && (doc.mimeType.includes('word') || doc.mimeType.includes('document'))) icon = 'fa-file-word text-blue-400';
-
-                    const sectionHtml = doc.section ? `<p class="text-[10px] sm:text-xs text-orange-300 font-medium mt-1 truncate"><i class="fas fa-bookmark mr-1"></i>${doc.section}</p>` : '';
-                    const issuedDateHtml = doc.issuedDate ? `<p class="text-[10px] sm:text-xs text-emerald-400 font-medium mt-1 truncate"><i class="fas fa-calendar-alt mr-1"></i>Issued: ${doc.issuedDate}</p>` : '';
-                    const revNoHtml = doc.revisionNo ? `<p class="text-[10px] sm:text-xs text-purple-400 font-medium mt-1 truncate"><i class="fas fa-code-branch mr-1"></i>${doc.revisionNo}</p>` : '';
-
-                    card.innerHTML = `
-                        <div class="flex items-start gap-3">
-                            <div class="w-10 h-10 rounded-lg bg-slate-900/80 flex items-center justify-center shrink-0 shadow-inner border border-slate-700">
-                                <i class="fas ${icon} text-lg"></i>
-                            </div>
-                            <div class="flex-1 overflow-hidden">
-                                <h4 class="font-bold text-white text-xs sm:text-sm truncate" title="${doc.title}">${doc.title}</h4>
-                                ${sectionHtml}
-                                ${issuedDateHtml}
-                                ${revNoHtml}
-                                <p class="text-[9px] sm:text-[10px] text-slate-500 mt-1 truncate">${doc.fileName || 'Document File'}</p>
-                            </div>
-                        </div>
-                        <div class="flex gap-2 mt-3 pt-3 border-t border-slate-700/50 opacity-100 sm:opacity-50 group-hover:opacity-100 transition">
-                            <button onclick="previewDocument('${doc.id}')" class="flex-1 bg-blue-600/20 hover:bg-blue-600/40 text-blue-400 border border-blue-500/30 py-1.5 rounded-lg text-[10px] sm:text-xs transition flex items-center justify-center font-medium"><i class="fas fa-eye mr-1.5"></i> Preview</button>
-                            <button onclick="downloadDocument('${doc.id}')" class="flex-1 bg-emerald-600/20 hover:bg-emerald-600/40 text-emerald-400 border border-emerald-500/30 py-1.5 rounded-lg text-[10px] sm:text-xs transition flex items-center justify-center font-medium"><i class="fas fa-download mr-1.5"></i> Download</button>
-                            <button onclick="deleteDocument('${doc.id}')" class="w-8 shrink-0 bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 py-1.5 rounded-lg text-[10px] sm:text-xs transition flex items-center justify-center"><i class="fas fa-trash"></i></button>
-                        </div>
-                    `;
-                    grid.appendChild(card);
-                });
-                container.appendChild(grid);
-            }
+            // Reset Button Status
+            btnSave.innerHTML = originalBtnText;
+            btnSave.disabled = false;
         }
 
-        function toggleDocumentFolder(gridId) {
-            const grid = document.getElementById(gridId);
-            const icon = document.getElementById('icon-' + gridId);
-            if (grid.classList.contains('hidden')) {
-                grid.classList.remove('hidden');
-                icon.classList.add('rotate-90');
-            } else {
-                grid.classList.add('hidden');
-                icon.classList.remove('rotate-90');
-            }
-        }
-
-        function deleteDocument(id) {
-            if(confirm('Hapus dokumen ini dari database?')) {
-                documentsData = documentsData.filter(d => d.id !== id);
-                saveDocuments();
-                renderDocuments();
-            }
-        }
-
-        // Fungsi Helper untuk konversi Base64 menjadi Blob (File Virtual)
-        function base64ToBlob(base64, mimeType) {
-            const byteCharacters = atob(base64);
-            const byteArrays = [];
-            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
-                const slice = byteCharacters.slice(offset, offset + 512);
-                const byteNumbers = new Array(slice.length);
-                for (let i = 0; i < slice.length; i++) {
-                    byteNumbers[i] = slice.charCodeAt(i);
-                }
-                const byteArray = new Uint8Array(byteNumbers);
-                byteArrays.push(byteArray);
-            }
-            return new Blob(byteArrays, {type: mimeType});
-        }
-
+        // ==========================================
+        // UPDATE PREVIEW MENGGUNAKAN GOOGLE DRIVE PLAYER
+        // ==========================================
         function previewDocument(id) {
             const doc = documentsData.find(d => d.id === id);
-            if(!doc || !doc.base64) return alert("File tidak ditemukan atau rusak.");
+            if(!doc || !doc.fileId) return alert("File ID (Google Drive) tidak ditemukan di database.");
             
             document.getElementById('previewModalTitle').innerHTML = `<i class="fas fa-eye text-blue-400 mr-2"></i>${doc.title}`;
             
             const iframe = document.getElementById('previewIframe');
             const img = document.getElementById('previewImage');
             
-            // Logika untuk menampilkan PDF/Gambar ke dalam In-App Modal
-            if (doc.mimeType.includes('image')) {
-                iframe.style.display = 'none';
-                img.style.display = 'block';
-                img.src = `data:${doc.mimeType};base64,${doc.base64}`;
-            } else {
-                img.style.display = 'none';
-                iframe.style.display = 'block';
-                
-                try {
-                    // Konversi ke Blob URL agar Browser (Chrome/Safari) mau menampilkan PDF di iFrame
-                    const blob = base64ToBlob(doc.base64, doc.mimeType);
-                    const blobUrl = URL.createObjectURL(blob);
-                    iframe.src = blobUrl;
-                } catch(e) {
-                    console.error("Blob conversion error: ", e);
-                    // Fallback darurat
-                    iframe.src = `data:${doc.mimeType};base64,${doc.base64}`;
-                }
-            }
+            img.style.display = 'none';
+            iframe.style.display = 'block';
+            
+            // Gunakan API Google Drive Preview (Dijamin muncul dan tidak crash browser)
+            iframe.src = `https://drive.google.com/file/d/${doc.fileId}/preview`;
             
             document.getElementById('documentPreviewModal').classList.remove('hidden');
         }
@@ -2227,28 +2045,18 @@
         function closePreviewModal() {
             document.getElementById('documentPreviewModal').classList.add('hidden');
             const iframe = document.getElementById('previewIframe');
-            
-            // Bersihkan memori Blob URL jika ada
-            if (iframe.src && iframe.src.startsWith('blob:')) {
-                URL.revokeObjectURL(iframe.src);
-            }
-            
-            // Kosongkan src untuk menghentikan media/memori
-            iframe.src = '';
-            document.getElementById('previewImage').src = '';
+            // Kosongkan src untuk menghentikan loading memori di background
+            if (iframe) iframe.src = '';
+            const img = document.getElementById('previewImage');
+            if (img) img.src = '';
         }
 
         function downloadDocument(id) {
             const doc = documentsData.find(d => d.id === id);
-            if(!doc || !doc.base64) return alert("File tidak ditemukan.");
+            if(!doc || !doc.fileUrl) return alert("URL File tidak ditemukan.");
             
-            const dataUrl = `data:${doc.mimeType};base64,${doc.base64}`;
-            const a = document.createElement('a');
-            a.href = dataUrl;
-            a.download = doc.fileName || doc.title;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
+            // Langsung buka link Drive asli untuk download
+            window.open(doc.fileUrl, '_blank');
         }
 
         // ==========================================
