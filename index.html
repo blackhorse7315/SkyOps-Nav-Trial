@@ -1051,6 +1051,16 @@
                             <input type="text" id="docSection" placeholder="e.g. Section 1 - Limitations" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs sm:text-sm outline-none focus:border-blue-500">
                         </div>
 
+                        <div id="docIssuedDateContainer" class="hidden">
+                            <label class="text-[10px] sm:text-xs text-slate-400 mb-1 block">Issued Date</label>
+                            <input type="date" id="docIssuedDate" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs sm:text-sm outline-none focus:border-blue-500" style="color-scheme: dark;">
+                        </div>
+
+                        <div id="docRevisionNoContainer" class="hidden">
+                            <label class="text-[10px] sm:text-xs text-slate-400 mb-1 block">Revision No.</label>
+                            <input type="text" id="docRevisionNo" placeholder="e.g. Rev 02" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs sm:text-sm outline-none focus:border-blue-500">
+                        </div>
+
                         <div>
                             <label class="text-[10px] sm:text-xs text-slate-400 mb-1 block">Document Title</label>
                             <input type="text" id="docTitle" required placeholder="Judul Dokumen" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-2 text-xs sm:text-sm outline-none focus:border-blue-500">
@@ -1071,15 +1081,15 @@
             </div>
 
             <!-- BAGIAN 10.2: DOCUMENT PREVIEW MODAL -->
-            <div id="documentPreviewModal" class="print:hidden fixed top-[115px] sm:top-[130px] bottom-0 left-0 right-0 z-[10500] hidden flex items-center justify-center bg-black/80 backdrop-blur-sm p-2 sm:p-4">
-                <div class="glass-panel w-full h-full max-w-5xl max-h-full flex flex-col rounded-2xl relative shadow-2xl overflow-hidden bg-[#0f172a]">
+            <div id="documentPreviewModal" class="print:hidden fixed inset-0 sm:top-[130px] z-[10500] hidden flex items-center justify-center bg-black/90 sm:bg-black/80 backdrop-blur-sm p-0 sm:p-4">
+                <div class="glass-panel w-full h-full max-w-5xl max-h-full flex flex-col rounded-none sm:rounded-2xl relative shadow-2xl overflow-hidden bg-[#0f172a]">
                     <div class="p-3 sm:p-4 border-b border-slate-700 flex justify-between items-center bg-slate-900/80 shrink-0">
                         <h3 id="previewModalTitle" class="text-base sm:text-xl font-bold text-white truncate pr-4"><i class="fas fa-eye text-blue-400 mr-2"></i>Document Preview</h3>
                         <button onclick="closePreviewModal()" class="text-slate-400 hover:text-white p-1.5 sm:p-2 z-50 cursor-pointer bg-slate-800 hover:bg-red-500/20 rounded-lg transition"><i class="fas fa-times text-lg"></i></button>
                     </div>
-                    <div class="flex-1 w-full h-full bg-slate-800/50 p-2 sm:p-4 overflow-hidden flex items-center justify-center" id="previewContainer">
-                        <iframe id="previewIframe" class="w-full h-full rounded-xl border border-slate-700 bg-white" style="display: none;"></iframe>
-                        <img id="previewImage" class="max-w-full max-h-full object-contain rounded-xl border border-slate-700 shadow-lg" style="display: none;" />
+                    <div class="flex-1 w-full h-full bg-slate-800/50 p-0 sm:p-4 overflow-hidden flex items-center justify-center" id="previewContainer">
+                        <iframe id="previewIframe" class="w-full h-full sm:rounded-xl border-0 sm:border border-slate-700 bg-white" style="display: none;"></iframe>
+                        <img id="previewImage" class="max-w-full max-h-full object-contain sm:rounded-xl border-0 sm:border border-slate-700 shadow-none sm:shadow-lg" style="display: none;" />
                     </div>
                 </div>
             </div>
@@ -1929,14 +1939,28 @@
         function handleDocTypeChange() {
             const type = document.getElementById('docType').value.toLowerCase();
             const secContainer = document.getElementById('docSectionContainer');
-            // Memunculkan kolom Section jika tipe mengandung kata 'flight manual'
+            const issuedDateContainer = document.getElementById('docIssuedDateContainer');
+            const revisionNoContainer = document.getElementById('docRevisionNoContainer');
+            
+            // Memunculkan kolom Section & Revision No jika tipe mengandung kata 'flight manual'
             if (type.includes('flight manual')) {
                 secContainer.classList.remove('hidden');
+                revisionNoContainer.classList.remove('hidden');
                 document.getElementById('docSection').required = true;
             } else {
                 secContainer.classList.add('hidden');
+                revisionNoContainer.classList.add('hidden');
                 document.getElementById('docSection').required = false;
                 document.getElementById('docSection').value = '';
+                document.getElementById('docRevisionNo').value = '';
+            }
+
+            // Memunculkan kolom Issued Date khusus untuk AIP
+            if (type === 'aip') {
+                issuedDateContainer.classList.remove('hidden');
+            } else {
+                issuedDateContainer.classList.add('hidden');
+                document.getElementById('docIssuedDate').value = '';
             }
         }
 
@@ -1995,6 +2019,8 @@
                     document.getElementById('docType').value = doc.type;
                     document.getElementById('docSection').value = doc.section || '';
                     document.getElementById('docTitle').value = doc.title;
+                    document.getElementById('docIssuedDate').value = doc.issuedDate || '';
+                    document.getElementById('docRevisionNo').value = doc.revisionNo || '';
                     document.getElementById('docBase64').value = doc.base64 || '';
                     document.getElementById('docMimeType').value = doc.mimeType || '';
                     document.getElementById('docModalTitle').innerHTML = '<i class="fas fa-edit text-blue-400 mr-2"></i>Edit Document';
@@ -2002,6 +2028,8 @@
                 }
             } else {
                 document.getElementById('docId').value = '';
+                document.getElementById('docIssuedDate').value = '';
+                document.getElementById('docRevisionNo').value = '';
                 document.getElementById('docModalTitle').innerHTML = '<i class="fas fa-file-upload text-blue-400 mr-2"></i>Add Document';
                 document.getElementById('docFile').required = true;
             }
@@ -2017,6 +2045,8 @@
             const type = document.getElementById('docType').value.trim();
             const section = document.getElementById('docSection').value.trim();
             const title = document.getElementById('docTitle').value.trim();
+            const issuedDate = document.getElementById('docIssuedDate').value;
+            const revisionNo = document.getElementById('docRevisionNo').value.trim();
             const base64 = document.getElementById('docBase64').value;
             const mimeType = document.getElementById('docMimeType').value;
             const fileName = document.getElementById('docFile').files[0] ? document.getElementById('docFile').files[0].name : '';
@@ -2031,6 +2061,8 @@
                 type: type,
                 section: section,
                 title: title,
+                issuedDate: issuedDate,
+                revisionNo: revisionNo,
                 base64: base64 || (id ? documentsData.find(d => d.id === id).base64 : ''),
                 mimeType: mimeType || (id ? documentsData.find(d => d.id === id).mimeType : ''),
                 fileName: fileName || (id ? documentsData.find(d => d.id === id).fileName : 'document')
@@ -2095,6 +2127,8 @@
                     else if(doc.mimeType && (doc.mimeType.includes('word') || doc.mimeType.includes('document'))) icon = 'fa-file-word text-blue-400';
 
                     const sectionHtml = doc.section ? `<p class="text-[10px] sm:text-xs text-orange-300 font-medium mt-1 truncate"><i class="fas fa-bookmark mr-1"></i>${doc.section}</p>` : '';
+                    const issuedDateHtml = doc.issuedDate ? `<p class="text-[10px] sm:text-xs text-emerald-400 font-medium mt-1 truncate"><i class="fas fa-calendar-alt mr-1"></i>Issued: ${doc.issuedDate}</p>` : '';
+                    const revNoHtml = doc.revisionNo ? `<p class="text-[10px] sm:text-xs text-purple-400 font-medium mt-1 truncate"><i class="fas fa-code-branch mr-1"></i>${doc.revisionNo}</p>` : '';
 
                     card.innerHTML = `
                         <div class="flex items-start gap-3">
@@ -2104,6 +2138,8 @@
                             <div class="flex-1 overflow-hidden">
                                 <h4 class="font-bold text-white text-xs sm:text-sm truncate" title="${doc.title}">${doc.title}</h4>
                                 ${sectionHtml}
+                                ${issuedDateHtml}
+                                ${revNoHtml}
                                 <p class="text-[9px] sm:text-[10px] text-slate-500 mt-1 truncate">${doc.fileName || 'Document File'}</p>
                             </div>
                         </div>
