@@ -1255,7 +1255,7 @@
 
         // --- APP INIT ---
         async function initApp() {
-            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbxHpf9fKJWb2KzxNQfRwCijrMYBH1GpSN1BA4WO7a8k56zdFMY31nsYeI0mIAwdXceq/exec') {
+            if (GOOGLE_SCRIPT_URL === '') {
                 console.warn('PERINGATAN: URL Google Sheet belum diatur! Aplikasi murni menggunakan Cloud Data. Masukkan URL Script di source code agar data dapat tampil.');
             }
             showView('loginScreen');
@@ -1278,7 +1278,7 @@
         function saveUsers() { postToSheet('users', usersData); }
 
         async function syncWithGoogleSheet() {
-            if (GOOGLE_SCRIPT_URL === 'https://script.google.com/macros/s/AKfycbxHpf9fKJWb2KzxNQfRwCijrMYBH1GpSN1BA4WO7a8k56zdFMY31nsYeI0mIAwdXceq/exec') { alert('URL Google Script belum diatur.'); return; }
+            if (GOOGLE_SCRIPT_URL === '') { alert('URL Google Script belum diatur.'); return; }
             
             const icons = document.querySelectorAll('.fa-sync-alt');
             icons.forEach(i => i.classList.add('fa-spin'));
