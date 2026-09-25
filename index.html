@@ -1693,6 +1693,7 @@
                 newWp.ilsFreq = document.getElementById('apIlsFreq').value;
                 newWp.ndbName = document.getElementById('apNdbName').value;
                 newWp.ndbFreq = document.getElementById('apNdbFreq').value;
+
                 const towers = [];
                 document.querySelectorAll('.tower-row').forEach(row => {
                     const n = row.querySelector('.twr-name').value;
@@ -1707,6 +1708,12 @@
                 if (id) {
                     const idx = waypointsData.findIndex(w => w.id === id);
                     if (idx !== -1) waypointsData[idx] = newWp;
+                    
+                    // MENGHAPUS MARKER LAMA DARI CACHE AGAR POPUP TER-UPDATE
+                    if (activeWpMarkers[id]) {
+                        if (waypointLayerGroup) waypointLayerGroup.removeLayer(activeWpMarkers[id]);
+                        delete activeWpMarkers[id];
+                    }
                 } else {
                     waypointsData.push(newWp);
                 }
