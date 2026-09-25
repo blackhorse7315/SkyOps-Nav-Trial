@@ -734,6 +734,12 @@
                                     <input type="text" id="apNdbFreq" placeholder="Freq" class="w-full bg-transparent border-b border-slate-700 text-[10px] outline-none">
                                 </div>
                             </div>
+                            
+                            <!-- CHART URLs SECTION -->
+                            <div class="grid grid-cols-2 gap-3 border-t border-slate-700/50 pt-3 mt-1">
+                                <div><label class="text-[10px] text-slate-400 block mb-1">Aerodrome Chart (URL)</label><input type="url" id="apAerodromeChart" placeholder="https://..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-emerald-500"></div>
+                                <div><label class="text-[10px] text-slate-400 block mb-1">Approach Chart (URL)</label><input type="url" id="apApproachChart" placeholder="https://..." class="w-full bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-xs outline-none focus:border-emerald-500"></div>
+                            </div>
                         </div>
                         <div class="flex gap-3 pt-2 sm:pt-4 border-t border-slate-700 mt-4 sm:mt-6"> <button type="button" onclick="closeWaypointModal()" class="flex-1 bg-slate-800 border border-slate-700 hover:bg-slate-700 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm transition">Cancel</button> <button type="submit" class="flex-1 bg-gradient-to-r from-blue-600 to-cyan-500 hover:from-blue-500 hover:to-cyan-400 py-2 sm:py-2.5 rounded-xl text-xs sm:text-sm font-semibold transition shadow-lg shadow-blue-500/20 text-white">Save Data</button> </div>
                     </form>
@@ -773,6 +779,8 @@
                                 <div><p class="text-[9px] text-emerald-400 uppercase font-bold">ILS</p><p id="detApIls" class="text-[10px] text-white font-mono">-</p></div>
                                 <div><p class="text-[9px] text-emerald-400 uppercase font-bold">NDB</p><p id="detApNdb" class="text-[10px] text-white font-mono">-</p></div>
                             </div>
+                            <!-- CHARTS RENDER SECTION -->
+                            <div id="detApCharts" class="grid grid-cols-2 gap-2 border-t border-emerald-500/10 pt-3 mt-1 hidden"></div>
                         </div>
                         <div class="grid grid-cols-3 gap-2 pt-2"> <button id="btnWpShowMap" class="bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-xs transition font-bold flex flex-col items-center gap-1"><i class="fas fa-map-marked-alt text-lg"></i> Map</button> <button id="btnWpEdit" class="bg-blue-600 hover:bg-blue-500 text-white py-2.5 rounded-xl text-xs transition font-bold flex flex-col items-center gap-1"><i class="fas fa-edit text-lg"></i> Edit</button> <button id="btnWpDelete" class="bg-red-600/20 hover:bg-red-600/40 text-red-400 border border-red-500/30 py-2.5 rounded-xl text-xs transition font-bold flex flex-col items-center gap-1"><i class="fas fa-trash text-lg"></i> Del</button> </div>
                     </div>
@@ -1629,6 +1637,20 @@
                 } else {
                     towerList.innerHTML = '<p class="text-[9px] text-slate-500 italic">No Tower Data</p>';
                 }
+                
+                // --- RENDER CHARTS ---
+                const chartsDiv = document.getElementById('detApCharts');
+                chartsDiv.innerHTML = '';
+                chartsDiv.classList.add('hidden');
+                if (wp.aerodromeChart || wp.approachChart) {
+                    chartsDiv.classList.remove('hidden');
+                    if (wp.aerodromeChart) {
+                        chartsDiv.innerHTML += `<a href="${wp.aerodromeChart}" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-emerald-400 border border-emerald-500/30 py-2 rounded-lg text-[10px] text-center transition shadow flex flex-col items-center justify-center gap-1.5"><i class="fas fa-map text-sm"></i> Aerodrome Chart</a>`;
+                    }
+                    if (wp.approachChart) {
+                        chartsDiv.innerHTML += `<a href="${wp.approachChart}" target="_blank" class="bg-slate-800 hover:bg-slate-700 text-blue-400 border border-blue-500/30 py-2 rounded-lg text-[10px] text-center transition shadow flex flex-col items-center justify-center gap-1.5"><i class="fas fa-layer-group text-sm"></i> Approach Chart</a>`;
+                    }
+                }
             } else {
                 apSection.classList.add('hidden');
             }
@@ -1693,6 +1715,10 @@
                 newWp.ilsFreq = document.getElementById('apIlsFreq').value;
                 newWp.ndbName = document.getElementById('apNdbName').value;
                 newWp.ndbFreq = document.getElementById('apNdbFreq').value;
+                
+                // Tambahan Chart URLs
+                newWp.aerodromeChart = document.getElementById('apAerodromeChart').value;
+                newWp.approachChart = document.getElementById('apApproachChart').value;
 
                 const towers = [];
                 document.querySelectorAll('.tower-row').forEach(row => {
@@ -1745,6 +1771,10 @@
                 document.getElementById('apIlsFreq').value = wp.ilsFreq || '';
                 document.getElementById('apNdbName').value = wp.ndbName || '';
                 document.getElementById('apNdbFreq').value = wp.ndbFreq || '';
+                
+                document.getElementById('apAerodromeChart').value = wp.aerodromeChart || '';
+                document.getElementById('apApproachChart').value = wp.approachChart || '';
+
                 const container = document.getElementById('towerInputsContainer');
                 container.innerHTML = '';
                 if (wp.towers && wp.towers.length > 0) wp.towers.forEach(t => addTowerRow(t.name, t.freq));
@@ -1777,6 +1807,11 @@
             document.getElementById('waypointForm').reset();
             document.getElementById('wpId').value = '';
             document.getElementById('towerInputsContainer').innerHTML = '';
+            
+            // Reset Chart URLs
+            if (document.getElementById('apAerodromeChart')) document.getElementById('apAerodromeChart').value = '';
+            if (document.getElementById('apApproachChart')) document.getElementById('apApproachChart').value = '';
+            
             toggleWpTypeFields();
             ['latDeg', 'latMin', 'latSec', 'lonDeg', 'lonMin', 'lonSec', 'wpLatDec', 'wpLonDec'].forEach(id => {
                 document.getElementById(id).value = '';
